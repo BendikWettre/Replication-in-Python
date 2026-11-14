@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 ROOT = Path(__file__).resolve().parent.parent
 PROCESSED = ROOT / "processed"
@@ -112,8 +113,7 @@ table2_tex.to_latex(TABLES / "table2.tex", float_format="%.2f", index=False,
 
 
 
-# Figure 1:
-
+# Figure 1: $1 investet in each stratagy
 wealth = (1 + monthly[["rf", "mkt", "d1", "d10"]]).cumprod()
 wealth.index = pd.to_datetime(wealth.index)
 start = pd.DataFrame(1.0, index=[pd.Timestamp("1926-12-31")], columns=wealth.columns)
@@ -139,3 +139,53 @@ for col in ["rf", "mkt", "d1"]:
 ax.set_xlim(wealth.index[0], wealth.index[-1])
 ax.legend()
 fig.savefig(FIGURES / "figure1.pdf", bbox_inches="tight")
+
+
+# Figure 2: Momentum crashes; the global financial crisis (Panel A) and the great depression (Panel B)
+
+CRASH_A = ("2009-03-09", "2013-03-28")
+CRASH_B = ("1932-06-01", "1939-12-30")
+
+
+def plot_cumulative(ax, returns):
+    """Plot $1 invested in rf, mkt, d1 and d10 on the given axis."""
+    wealth = (1 + returns).cumprod()
+    start_day = wealth.index[0] - pd.Timedelta(days=1)
+    start = pd.DataFrame(1.0, index=[start_day], columns=wealth.columns)
+    wealth = pd.concat([start, wealth])
+
+    ax.plot(wealth.index, wealth["rf"], label="Risk-free",
+            linestyle=":", linewidth=0.6, color="black")
+    ax.plot(wealth.index, wealth["mkt"], label="Market",
+            linestyle="--", linewidth=0.6, color="black")
+    ax.plot(wealth.index, wealth["d1"], label="Past losers",
+            linestyle="-", linewidth=0.6, color="black")
+    ax.plot(wealth.index, wealth["d10"], label="Past winners",
+            linestyle="-", linewidth=0.8, marker="o",
+            markevery=60, markersize=4, color="black")
+    ax.set_xlim(wealth.index[0], wealth.index[-1])
+    ax.set_ylabel("Dollar value of investment")
+    return wealth
+
+
+daily["mkt"] = daily["mkt_rf"] + daily["rf"]
+cols = ["rf", "mkt", "d1", "d10"]
+
+fig, (ax_a, ax_b) = plt.subplots(2, 1, figsize=(8, 10))
+
+plot_cumulative(ax_a, daily.loc[CRASH_A[0]:CRASH_A[1], cols])
+ax_a.set_title("Panel A: Cumulative gains from investments, "
+               "March 09, 2009-March 28, 2013", loc="left")
+ax_a.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[1, 7]))
+ax_a.xaxis.set_major_formatter(mdates.DateFormatter("%Y:%m"))
+ax_a.legend(loc="upper left")
+
+plot_cumulative(ax_b, daily.loc[CRASH_B[0]:CRASH_B[1], cols])
+ax_b.set_title("Panel B: Cumulative gains from investments, "
+               "June 01, 1932-December 30, 1939", loc="left")
+ax_b.xaxis.set_major_locator(mdates.YearLocator())
+ax_b.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+ax_b.legend(loc="lower right")
+
+fig.tight_layout()
+fig.savefig(FIGURES / "figure2.pdf", bbox_inches="tight")
