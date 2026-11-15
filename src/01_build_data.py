@@ -18,6 +18,7 @@ FRENCH_DAILY_FILE = RAW / "F-F_Research_Data_Factors_daily.csv"
 SP500_FILE = RAW / "sp500_daily.csv"
 VIX_FILE = RAW / "vix_daily.csv"
 CRSP_VW_FILE = RAW / "crsp_vw_monthly.csv"
+HML_DEVIL_FILE = RAW / "The Devil in HMLs Details Factors Monthly.xlsx"
 
 SAMPLE_START = "1927-01"
 SAMPLE_END = "2013-03"
@@ -68,6 +69,12 @@ crsp.index = crsp.pop("mthcaldt").dt.to_period("M")
 crsp_24m = np.expm1(np.log1p(crsp["vwretd"]).rolling(BEAR_WINDOW, min_periods=1)
                     .sum().shift(1))
 ff_m["bear_crsp"] = (crsp_24m.reindex(ff_m.index) < 0).astype(int)
+
+# HML-devil (Asness and Frazzini, 2011), US series, for Appendix B
+hmld = pd.read_excel(HML_DEVIL_FILE, sheet_name="HML Devil", skiprows=18,
+                     usecols=["DATE", "USA"])
+hmld.index = pd.to_datetime(hmld.pop("DATE"), format="%m/%d/%Y").dt.to_period("M")
+ff_m["hmld"] = hmld["USA"]
 
 monthly = dm_m.join(ff_m, how="left").loc[SAMPLE_START:SAMPLE_END]
 monthly["bull"] = 1 - monthly["bear"]
