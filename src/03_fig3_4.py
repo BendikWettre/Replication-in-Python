@@ -1,5 +1,4 @@
 from pathlib import Path
-import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from statsmodels.regression.rolling import RollingOLS
