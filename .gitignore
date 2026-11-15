@@ -13,3 +13,6 @@ venv/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Papers and documentation (copyrighted, not redistributed)
+docs/*.pdf

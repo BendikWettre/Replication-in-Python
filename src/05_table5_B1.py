@@ -1,3 +1,4 @@
+"""Table 5 and Appendix Table B1."""
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -10,7 +11,7 @@ MONTHLY_FILE = PROCESSED / "monthly.csv"
 
 monthly = pd.read_csv(MONTHLY_FILE, index_col="month").dropna(subset=["mkt_var"])
 
-# Table 5 construction:
+# Table 5: WML on bear indicator and market variance
 
 specs_t5 = {
     "(1)" :  "wml ~ bear",
@@ -56,12 +57,12 @@ table5_tex = (table5.rename(index=row_labels_t5)
 table5_tex.to_latex(TABLES / "table5.tex", column_format="lccccc")
 
 
-# Table B1 construction:
+# Table B1: WML, HML-devil and SMB on the panic indicator
 
 # HML-d columns end in 2012:12 in the paper
 monthly.loc["2013-01":, "hmld"] = np.nan
 
-# The combination portfolio for (7)-(8)
+# 50/50 WML and HML-d portfolio, columns (7)-(8)
 monthly["wml_hmld"] = 0.5 * monthly["wml"] + 0.5 * monthly["hmld"]
 
 specs_b1 = {

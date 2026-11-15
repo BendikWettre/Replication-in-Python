@@ -1,3 +1,4 @@
+"""Figure 3 and Figure 4 (plus a monthly-hedge version of Figure 4)."""
 from pathlib import Path
 import pandas as pd
 import statsmodels.api as sm
@@ -13,9 +14,8 @@ DAILY_FILE = PROCESSED / "daily.csv"
 daily = pd.read_csv(DAILY_FILE, index_col="date", parse_dates=["date"])
 
 
-# Regression for figure 3
-
-# Creating a DataFrame for the explanatory variables (1, mkt_rf_1,...,mkt_rf_{10})
+# Regressors: constant and market excess return at lags 0-10.
+# The beta is the sum of the 11 slope coefficients.
 X = pd.concat({f"lag{k}": daily["mkt_rf"].shift(k) for k in range(11)}, axis=1)
 X = sm.add_constant(X) 
 
@@ -29,7 +29,6 @@ for col in excess_d1_d10.columns:
 beta = pd.DataFrame(beta)
 
 
-# Plots:
 def plot_betas(ax, beta, start_day, end_day):
     """Plot loser and winner betas between start_day and end_day."""
     beta = beta.loc[start_day:end_day]
@@ -44,7 +43,7 @@ def plot_betas(ax, beta, start_day, end_day):
     return beta
 
 
-# Figure 3: three non-overlapping subsamples
+# Figure 3: rolling 126-day betas of the loser and winner deciles
 PANELS = [
     ("Panel A: 1927:06-1939:12", "1927-06", "1939-12", 2),
     ("Panel B: 1940:01-1999:12", "1940-01", "1999-12", 10),
@@ -65,7 +64,7 @@ fig.savefig(FIGURES / "figure3.pdf", bbox_inches="tight")
 
 
 
-# Fig 4
+# Figure 4: unhedged, ex post hedged and ex ante hedged WML (42-day betas)
 Period_A = ("1927-06-01", "1939-12-30")
 Period_B = ("1927-06-01", "2013-01-31")
 WML, RF, MKT_RF = daily["wml"], daily["rf"], daily["mkt_rf"]
@@ -132,7 +131,6 @@ beta_ante_m = beta_wml.groupby(month).last().shift(1)
 # Ex post: beta from the first 42 days starting on the first day of the month
 beta_post_m = beta_wml.shift(-41).groupby(month).first()
 
-# Give every day the beta of its month
 beta_ante_d = pd.Series(beta_ante_m.reindex(month).to_numpy(), index=daily.index)
 beta_post_d = pd.Series(beta_post_m.reindex(month).to_numpy(), index=daily.index)
 

@@ -1,3 +1,4 @@
+"""Table 1, Table 2, Figure 1 and Figure 2."""
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -17,47 +18,39 @@ monthly = pd.read_csv(MONTHLY_FILE, index_col="month")
 daily = pd.read_csv(DAILY_FILE, index_col="date", parse_dates=["date"])
 
 
-# Table 1: Creating a DataFrame for excess returns of all 10 momentum 
-# decile portfolios, and adding WML and Market at the end
+# Table 1: decile, WML and market characteristics
 deciles = [f"d{i}" for i in range(1, 11)]
 excess = monthly[deciles].sub(monthly["rf"], axis=0) 
 excess["WML"], excess["Market"] = monthly["wml"], monthly["mkt_rf"]
 
-mean = excess.mean() * 12 * 100 # % p.a
-# print(mean)
-sigma = excess.std() * 12 ** 0.5 * 100 # % p.a
-# print(sigma)
-SR = mean / sigma 
-# print(SR)
+mean = excess.mean() * 12 * 100  # % p.a.
+sigma = excess.std() * 12 ** 0.5 * 100  # % p.a.
+SR = mean / sigma
 
-# CAPM regression
-X = sm.add_constant(monthly["mkt_rf"]) # Adding a column with only 1's (for alpha)
+# CAPM alpha and beta
+X = sm.add_constant(monthly["mkt_rf"])
 alpha, t_alpha, beta = {}, {}, {}
 
 for col in excess.columns:
     res = sm.OLS(excess[col], X).fit()
-    alpha[col] = res.params["const"] * 12 * 100   # % per år
+    alpha[col] = res.params["const"] * 12 * 100  # % p.a.
     t_alpha[col] = res.tvalues["const"]
     beta[col] = res.params["mkt_rf"]
 
-# Market regressed on itself: alpha = 0 and beta = 1 by construction
-# (the t-statistic would only be numerical noise). Hence,
+# Market on itself: alpha = 0 and beta = 1 by construction
 alpha["Market"], t_alpha["Market"], beta["Market"] = 0.0, 0.0, 1.0
 
-# SK(m) and SK(d): skewness of monthly and daily log-returns (full period)
-# Monthly:
+# Skewness of monthly (SK(m)) and daily (SK(d)) log returns
 log_returns_m =np.log1p(monthly[deciles])
 log_returns_m["WML"] = np.log1p(monthly["wml"] + monthly["rf"])
 log_returns_m["Market"] = np.log1p(monthly["mkt_rf"] + monthly["rf"])
 
-# Daily:
 log_returns_d =np.log1p(daily[deciles])
 log_returns_d["WML"] = np.log1p(daily["wml"] + daily["rf"])
 log_returns_d["Market"] = np.log1p(daily["mkt_rf"] + daily["rf"])
 
 sk_m, sk_d = log_returns_m.skew(), log_returns_d.skew()
 
-# Putting the above results in a DataFrame:
 table1 = pd.DataFrame({
     "r - rf": mean, 
     "sigma": sigma,
@@ -69,7 +62,7 @@ table1 = pd.DataFrame({
     "SK(d)" : sk_d    
     }).T
 
-# The t-statistics in parentheses 
+# t-statistics in parentheses
 table1_fmt = table1.copy().astype(object)
 table1_fmt.loc["t(Alpha)"] = table1.loc["t(Alpha)"].map(lambda x: f"({x:.2f})")
 
@@ -89,9 +82,7 @@ table1_tex = (table1_fmt
 table1_tex.to_latex(TABLES / "table1.tex", float_format="%.2f", column_format="lcccccccccccc")
 
 
-# Table 2: Rank of 15 worst monthly momentum returns for WML_t over the time
-# 1927:01-2013:03 time period and tabulate the 2y market returns (Mkt-2y) 
-# and the contemporaneous market return (Mkt_t)
+# Table 2: 15 worst WML months, with 2-year and contemporaneous market returns
 
 
 worst = monthly.nsmallest(15, "wml")
@@ -113,7 +104,7 @@ table2_tex.to_latex(TABLES / "table2.tex", float_format="%.2f", index=False,
 
 
 
-# Figure 1: $1 investet in each stratagy
+# Figure 1: cumulative value of $1 invested, 1927-2013
 wealth = (1 + monthly[["rf", "mkt", "d1", "d10"]]).cumprod()
 wealth.index = pd.to_datetime(wealth.index)
 start = pd.DataFrame(1.0, index=[pd.Timestamp("1926-12-31")], columns=wealth.columns)
@@ -141,7 +132,7 @@ ax.legend()
 fig.savefig(FIGURES / "figure1.pdf", bbox_inches="tight")
 
 
-# Figure 2: Momentum crashes; the global financial crisis (Panel A) and the great depression (Panel B)
+# Figure 2: cumulative daily returns after 2009-03 (Panel A) and 1932-06 (Panel B)
 
 CRASH_A = ("2009-03-09", "2013-03-28")
 CRASH_B = ("1932-06-01", "1939-12-30")

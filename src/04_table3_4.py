@@ -1,3 +1,4 @@
+"""Table 3 and Table 4."""
 from pathlib import Path
 import pandas as pd
 import statsmodels.formula.api as smf
@@ -10,7 +11,7 @@ MONTHLY_FILE = PROCESSED / "monthly.csv"
 monthly = pd.read_csv(MONTHLY_FILE, index_col="month")
 
 
-# Building Table 3: Market timing results
+# Table 3: market-timing regressions
 specs = {
     "(1)" :  "wml ~ mkt_rf",
     "(2)" :  "wml ~ mkt_rf + bear + bear:mkt_rf",
@@ -29,10 +30,8 @@ params = pd.DataFrame(params)
 tvals = pd.DataFrame(tvals)
 params.loc[["Intercept","bear"]] *= 100
 params = params.reindex(["Intercept", "bear", "mkt_rf", "bear:mkt_rf", "bear:up:mkt_rf"])
-# print(params)
 
 tvals = tvals.reindex(["Intercept", "bear", "mkt_rf", "bear:mkt_rf", "bear:up:mkt_rf"])
-# print(tvals)
 
 rows = {}
 for var in params.index:
@@ -73,7 +72,7 @@ table3_tex.to_latex(TABLES / "table3.tex", column_format="lcccccccccccc")
 
 
 
-# Table 4: Momentum portfolio optionality
+# Table 4: optionality by decile, bear (Panel A) and bull (Panel B) markets
 deciles = [f"d{i}" for i in range(1, 11)]
 y = monthly[deciles].sub(monthly["rf"], axis=0) 
 y["WML"] = monthly["wml"]
@@ -134,7 +133,6 @@ for title in ["Panel A", "Panel B"]:
     start = tex.index(rf"\textit{{{title}")
     end = tex.index("\n", start) + 1
     line = tex[start:end]
-    # Let the title span all columns so it does not widen the first column
     text = line.split("&")[0].strip()
     title_row = rf"\multicolumn{{12}}{{l}}{{{text}}} \\" + "\n"
     new = title_row + "\\midrule\n" if title == "Panel A" else "\\midrule\n" + title_row + "\\midrule\n"

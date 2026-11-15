@@ -1,3 +1,4 @@
+"""Table 6."""
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -11,8 +12,9 @@ DAILY_FILE = PROCESSED / "daily.csv"
 daily = pd.read_csv(DAILY_FILE, index_col="date", parse_dates=["date"])
 start, end = "1990-01-02", "2013-03-28"
 
+# Table 6: daily WML on variance-swap returns, 1990-2013
 daily_t6 = daily.loc[start:end]
-daily_t6["r_vs"] /= 10000
+daily_t6["r_vs"] /= 10000  # decimal variance units
 
 # Normalize panic by the mean bear-market variance in the 1990-2013 sample
 v_bar_b = daily_t6.loc[daily_t6["bear"] == 1, "mkt_var"].mean()
