@@ -12,7 +12,7 @@ monthly = pd.read_csv(MONTHLY_FILE, index_col="month")
 
 # Building Table 3: Market timing results
 specs = {
-    "(1)" : "wml ~ mkt_rf",
+    "(1)" :  "wml ~ mkt_rf",
     "(2)" :  "wml ~ mkt_rf + bear + bear:mkt_rf",
     "(3)" :  "wml ~ mkt_rf + bear + bear:mkt_rf + bear:up:mkt_rf",
     "(4)" :  "wml ~ mkt_rf + bear:mkt_rf + bear:up:mkt_rf"
