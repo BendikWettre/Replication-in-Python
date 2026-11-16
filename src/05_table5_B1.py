@@ -56,6 +56,18 @@ table5_tex = (table5.rename(index=row_labels_t5)
                .rename_axis(columns="Coefficient"))
 table5_tex.to_latex(TABLES / "table5.tex", column_format="lccccc")
 
+# Implied expected WML return from column (4), shown in the presentation
+res4 = smf.ols(specs_t5["(4)"], data=monthly).fit()
+var_bear = monthly.loc[monthly["bear"] == 1, "mkt_var"].mean()
+var_apr09 = monthly.loc["2009-04", "mkt_var"]
+
+print("Implied E[WML], column (4):")
+print(f"  Not a bear market: E[WML] = {100 * res4.params['Intercept']:.2f} % per month")
+for label, var in [("Bear, average variance", var_bear), ("Bear, April 2009", var_apr09)]:
+    e_wml = res4.params["Intercept"] + res4.params["bear:mkt_var"] * var
+    print(f"  {label}: var = {var:.3f}, vol = {np.sqrt(var):.0%}, "
+          f"E[WML] = {100 * e_wml:.2f} % per month")
+
 
 # Table B1: WML, HML-devil and SMB on the panic indicator
 

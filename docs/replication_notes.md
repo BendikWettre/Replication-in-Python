@@ -56,8 +56,9 @@ essentially zero ($t = 0.0$).
 
 The rolling 126-day loser beta becomes negative around 1950 (minimum about
 $-0.20$). The paper's Panel B has a vertical axis starting at zero, so these
-estimates are not visible there. [State whether our figure clips the axis in
-the same way or shows the full range.]
+estimates are not visible there. Like the paper, our figure starts the
+vertical axis at zero, so these few negative values are not shown either. This
+only affects the display, not the estimates.
 
 ## Figure 4
 
